@@ -25,8 +25,12 @@ to release the mouse back to the PC without lifting your hand.
 Install the dependencies:
 
 ```bash
-sudo pacman -S scrcpy android-tools
+sudo pacman -S --needed scrcpy android-tools python
 ```
+
+`python` is needed because the status/size probe shells out to `python3`. It is
+present on most systems already, but not guaranteed — `--needed` keeps it from
+reinstalling if you have it.
 
 On the phone: enable **USB debugging** in Developer Options, plug it in, and accept
 the RSA prompt. Confirm the connection with:
@@ -40,17 +44,29 @@ The widget shows the connected model name once `adb` reports `device usb:`.
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/Apsinghsa/omarchy-phone-control
-```
-
-Then restart the shell so the compiled bar widget is picked up:
-
-```bash
+omarchy plugin add https://github.com/Apsinghsa/omarchy-phone-control --enable --yes
 omarchy restart shell
 ```
 
+`--enable` is **required** here. Without it the plugin is cloned but left
+disabled, so no bar icon ever appears and it looks like the install failed.
+`--yes` skips the confirmation prompt.
+
 A compiled third-party bar widget does **not** hot-reload — `omarchy-shell
 rescanPlugins` will not replace already-compiled code, so the restart is required.
+
+Check it worked:
+
+```bash
+omarchy plugin list | grep apsingh.phone     # should say "enabled"
+```
+
+If you already added it without `--enable`, fix it with:
+
+```bash
+omarchy plugin enable apsingh.phone
+omarchy restart shell
+```
 
 ### Install the helper scripts
 

@@ -50,8 +50,8 @@ if running; then
   exit 0
 fi
 
-for cmd in scrcpy adb; do
-  command -v "$cmd" >/dev/null 2>&1 || { printf '[scrcpy-control] error: missing %s — see README\n' "$cmd" >&2; exit 1; }
+for cmd in scrcpy adb python3; do
+  command -v "$cmd" >/dev/null 2>&1 || { printf '[scrcpy-control] error: missing %s — see README (pacman -S --needed ...)\n' "$cmd" >&2; exit 1; }
 done
 
 # --- device must be present AND authorized ----------------------------------
