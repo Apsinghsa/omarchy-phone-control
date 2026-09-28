@@ -52,7 +52,36 @@ omarchy restart shell
 A compiled third-party bar widget does **not** hot-reload — `omarchy-shell
 rescanPlugins` will not replace already-compiled code, so the restart is required.
 
-To remove it:
+### Install the helper scripts
+
+The bar widget's Start/Stop buttons call `~/.local/bin/scrcpy-phone-control`.
+Link it from the cloned plugin directory — no path editing needed:
+
+```bash
+~/.config/omarchy/plugins/apsingh.phone/scripts/install.sh
+```
+
+or by hand:
+
+```bash
+mkdir -p ~/.local/bin
+ln -sf ~/.config/omarchy/plugins/apsingh.phone/scripts/scrcpy-phone-control.sh \
+        ~/.local/bin/scrcpy-phone-control
+```
+
+### Optional: hide the control window
+
+Control-only mode leaves an empty window mapped, because scrcpy needs it to
+capture the mouse. To shrink it and make it nearly invisible, add to your
+Hyprland config (`~/.config/hypr/hyprland.conf`):
+
+```conf
+source = ~/.config/omarchy/plugins/apsingh.phone/hypr/scrcpy-control.conf
+```
+
+It stays focusable, which it must be.
+
+To remove the plugin:
 
 ```bash
 omarchy plugin remove apsingh.phone
@@ -68,18 +97,51 @@ omarchy plugin remove apsingh.phone
    to the PC.
 5. **Stop scrcpy** — enabled only while it is running.
 
-## Known limitation: the start script
+## The helper script
 
-The widget's **Start** / **Stop** buttons shell out to a helper script:
+Start/Stop shell out to `~/.local/bin/scrcpy-phone-control`, which wraps scrcpy
+in control-only mode:
 
+```bash
+scrcpy --no-video --no-audio -K -M --shortcut-mod=lalt
 ```
-/home/apsingh/Documents/Hermes/scrcpy-phone-control.sh
+
+`--no-video`/`--no-audio` drop the streams, `-K`/`-M` enable UHID keyboard and
+mouse. The script `exec`s scrcpy so the process command line becomes scrcpy's
+own — that is what the widget's `pgrep`/`pkill` match on.
+
+**It deliberately does not pass `--no-window`.** That flag is not the same as
+`--no-video`: it removes the window entirely, and with no window there is
+nothing to receive the shortcut-mod key, so the mouse can never be released
+back to the PC.
+
+You can also drive it directly:
+
+```bash
+scrcpy-phone-control          # start
+scrcpy-phone-control --status # is it running?
+scrcpy-phone-control --stop   # stop
 ```
 
-That path is hardcoded and is specific to the machine this was developed on. If you
-clone this repo, either create that script at that path or edit the `startService()`
-function in `Widget.qml` to point at your own. The bar icon, status polling and panel
-work without it — only the Start/Stop buttons depend on it.
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `SCRCPY_CONTROL_MOD` | `lalt` | key that releases the mouse (`lalt`, `rsuper`, `lctrl`, …) |
+| `SCRCPY_CONTROL_LOG` | `$XDG_RUNTIME_DIR/scrcpy_controller.log` | log file |
+| `SCRCPY_SERIAL` | *(auto)* | pin to one device when several are attached |
+
+`Left Alt` avoids colliding with Omarchy's own `SUPER,KEY` bindings. If it
+interferes, try `rsuper` or `lctrl`.
+
+### Behaviour notes
+
+- UHID mouse is **relative mode**: the desktop pointer disappears while the
+  phone is captured. Expected, not a bug.
+- In UHID mode the click bindings are **inverted** versus normal scrcpy —
+  right-click sends BACK, middle-click sends HOME. Remap with
+  `--mouse-bind=xxxx:xxxx`.
+- scrcpy removes its server from the device on exit, so there is nothing to
+  clean up between sessions.
+- A `WARN: Could not set window icon` line in the log is cosmetic.
 
 ## Files
 
@@ -88,6 +150,9 @@ work without it — only the Start/Stop buttons depend on it.
 | `manifest.json` | Plugin manifest — id, entry points, bar widget metadata |
 | `Widget.qml` | Bar button, 3s status poll, start/stop service control |
 | `Panel.qml` | Drawer panel — status line, Start/Stop buttons, usage hint |
+| `scripts/scrcpy-phone-control.sh` | Wraps scrcpy in control-only mode |
+| `scripts/install.sh` | Links the script into `~/.local/bin` |
+| `hypr/scrcpy-control.conf` | Optional rule to shrink/hide the control window |
 
 ## How the status probe works
 

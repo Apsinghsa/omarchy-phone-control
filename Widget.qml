@@ -78,8 +78,10 @@ BarWidget {
     p.running = true
   }
 
+  // Scripts are installed to ~/.local/bin by the README's install step and are
+  // referenced through $HOME so this works for any user account.
   function startService() {
-    runAction("nohup /home/apsingh/Documents/Hermes/scrcpy-phone-control.sh >> /tmp/scrcpy_controller.log 2>&1 &")
+    runAction("nohup \"$HOME/.local/bin/scrcpy-phone-control\" >> \"${XDG_RUNTIME_DIR:-/tmp}/scrcpy_controller.log\" 2>&1 &")
     Qt.callLater(root.probe)
   }
 
