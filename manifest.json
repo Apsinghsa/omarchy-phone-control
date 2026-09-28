@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "apsingh.phone",
+  "name": "Phone Control",
+  "version": "0.1.0",
+  "author": "apsingh",
+  "license": "MIT",
+  "description": "scrcpy UHID control: left-click summons the phone capture window from the scratchpad (Alt on the keyboard releases the mouse back to the PC); right-click starts/stops the scrcpy service.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "Widget.qml"
+  },
+  "barWidget": {
+    "displayName": "Phone Control",
+    "description": "Control the Android phone via scrcpy UHID. Click to summon/hide the capture window from the scratchpad; right-click to start or stop scrcpy.",
+    "category": "Status",
+    "aliases": ["phone", "scrcpy", "android"],
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
